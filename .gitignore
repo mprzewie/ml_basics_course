@@ -102,3 +102,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# LaTeX stuff
+# I generate .tex files directly from notebooks, therefore all products of that are redundant.
+*.tex
+*.aux
+*.log
+*.out
+*.pdf
+*.png
+*.fuse*
