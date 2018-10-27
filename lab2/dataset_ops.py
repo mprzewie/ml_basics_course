@@ -7,7 +7,8 @@ import cv2
 
 def load_dataset(
     img_path: str, 
-    space_size: Tuple[int, int]=(100, 100)
+    space_size: Tuple[int, int]=(100, 100),
+    dropout: float = 0.0
 ) -> Tuple[np.ndarray, np.ndarray]:
     
     ds = cv2.imread(img_path)
@@ -26,7 +27,8 @@ def load_dataset(
 
     X = np.array(X)
     y = np.array(y)
-    return X, y
+    keep = np.random.rand(X.shape[0]) > dropout
+    return X[keep], y[keep]
 
 def sliced_dataset_name(prefix: str, n_slices: int, x0: int, x1: int) -> str:
     return f"{prefix}.{n_slices}.{x0}.{x1}"
@@ -51,7 +53,7 @@ def slice_dataset(X: np.ndarray, y: np.ndarray, n_slices: int, space_size: Tuple
             result[(x0, x1)] = X[condition], y[condition]
     return result
 
-def visualize_dataset(X: np.ndarray, y: np.ndarray, n_classes: Optional[int]=None, space_size: Tuple[int, int]=(100, 100)):
+def visualize_dataset(X: np.ndarray, y: np.ndarray, n_classes: Optional[int]=None, space_size: Tuple[Tuple[int,int], Tuple[int,int]]=((0,100), (0,100))):
     n_classes = len(np.unique(y)) if n_classes is None else n_classes
     colors = ['k', 'b', 'r', 'c', 'm', 'y', 'k', 'w']
     assert(n_classes <= len(colors))
@@ -59,6 +61,6 @@ def visualize_dataset(X: np.ndarray, y: np.ndarray, n_classes: Optional[int]=Non
     for c in range(n_classes):
         X_c = X[y==c]
         plt.scatter(X_c[:, 0], X_c[:, 1], color=colors[c], marker=".")
-    plt.xlim(0, space_size[0])
-    plt.ylim(0, space_size[1])
-    plt.show()
+    plt.xlim(space_size[0][0], space_size[0][1])
+    plt.ylim(space_size[1][0], space_size[1][1])
+#     plt.show()
