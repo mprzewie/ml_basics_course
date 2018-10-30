@@ -1,5 +1,5 @@
 KEY=
-REGEX=$(shell echo $(KEY) | sed 's/.ipynb//').ipynb
+REGEX='$(shell echo $(KEY) | sed 's/.ipynb//').*.ipynb'
 TREEGREP=tree -fi | grep $(REGEX)
 LATEX=jupyter nbconvert --execute  --to latex 
 PDF=pdflatex
