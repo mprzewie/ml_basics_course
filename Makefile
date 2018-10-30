@@ -17,8 +17,11 @@ list:
 	$(TREEGREP)
 
 # removes unstaged files
-clean:
+clean: stripout
 	git clean -xdf	
+
+stripout:
+	nbstripout `$(TREEGREP)`
 
 # updates requirements.txt
 requpdate:
