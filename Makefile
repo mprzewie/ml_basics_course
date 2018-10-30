@@ -1,20 +1,14 @@
 EXEC=jupyter nbconvert --to notebook --execute
-LATEX=jupyter nbconvert --to latex 
+LATEX=jupyter nbconvert --execute  --to latex 
 PDF=pdflatex
 
 
 clean:
 	git clean -xdf
 
-%.pdf: %.nbconvert.tex
+%.pdf: %.tex
 	cd `dirname $^` && $(PDF) `basename $^`
 
-%.tex: %.nbconvert.ipynb
-	$(LATEX) $^ --output=$@ 	
-
-%.nbconvert.ipynb: %.ipynb 
-	$(EXEC) $^ 
-
-
-
+%.tex: %.ipynb
+	$(LATEX) $^ --output=`basename $@` 	
 
