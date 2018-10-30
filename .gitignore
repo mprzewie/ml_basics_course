@@ -105,6 +105,7 @@ venv.bak/
 
 # LaTeX stuff
 # I generate .tex files directly from notebooks, therefore all products of that are redundant.
+*.nbconvert.ipynb
 *.tex
 *.aux
 *.log
@@ -112,3 +113,5 @@ venv.bak/
 *.pdf
 *.png
 *.fuse*
+
+!lab2/ds*.png

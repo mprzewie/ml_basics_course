@@ -9,6 +9,7 @@ pip install -r requirements.txt
 ## Building reports
 
 ```bash
+jupyter nbconvert <notebook_name>.ipynb --to notebook --execute
 jupyter nbconvert <notebook_name>.ipynb --to latex
 pdflatex <notebook_name>.tex
 ```
