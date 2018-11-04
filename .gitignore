@@ -115,3 +115,6 @@ venv.bak/
 *.fuse*
 
 !lab2/ds*.png
+
+# matlab files with datasets
+*.mat
