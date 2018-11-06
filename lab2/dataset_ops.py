@@ -54,6 +54,7 @@ def slice_dataset(X: np.ndarray, y: np.ndarray, n_slices: int, space_size: Tuple
     return result
 
 def visualize_dataset(X: np.ndarray, y: np.ndarray, n_classes: Optional[int]=None, space_size: Tuple[Tuple[int,int], Tuple[int,int]]=((0,100), (0,100))):
+    fig = plt.figure()
     n_classes = len(np.unique(y)) if n_classes is None else n_classes
     colors = ['k', 'b', 'r', 'c', 'm', 'y', 'k', 'w']
     assert(n_classes <= len(colors))
@@ -63,4 +64,5 @@ def visualize_dataset(X: np.ndarray, y: np.ndarray, n_classes: Optional[int]=Non
         plt.scatter(X_c[:, 0], X_c[:, 1], color=colors[c], marker=".")
     plt.xlim(space_size[0][0], space_size[0][1])
     plt.ylim(space_size[1][0], space_size[1][1])
+    return fig
 #     plt.show()
