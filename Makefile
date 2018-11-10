@@ -1,7 +1,8 @@
 KEY=
+TIMEOUT=3600
 REGEX='$(shell echo $(KEY) | sed 's/.ipynb//').*.ipynb'
 TREEGREP=tree -fi | grep $(REGEX)
-LATEX=jupyter nbconvert --execute  --to latex 
+LATEX=jupyter nbconvert --execute --ExecutePreprocessor.timeout=$(TIMEOUT) --to latex 
 PDF=pdflatex
 REQUIREMENTS=requirements.txt
 
