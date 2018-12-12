@@ -119,3 +119,6 @@ venv.bak/
 
 # matlab files with datasets
 *.mat
+
+# pycharm
+.idea
