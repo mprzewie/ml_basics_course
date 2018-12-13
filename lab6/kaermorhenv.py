@@ -9,6 +9,7 @@ PL = 0
 MNT = 1
 WTCH = 2
 MNST = 3
+LAVA = 4
 
 UP = 0
 RIGHT = 1
@@ -21,6 +22,7 @@ COLORS = np.array([
     [1, 1, 1],
     [0, 0, 0],
     [0, 0, 1],
+    [0, 1, 0],
     [1, 0, 0]
 ]).astype(float)
 
@@ -117,7 +119,13 @@ class KaerMorhenv(DiscreteEnv):
         new_state, reward, done, info = super(KaerMorhenv, self).step(a)
         if old_done:
             self.s = new_state = old_state
+
+        if self.board[tuple(self.witcher_coords)] == LAVA:
+            self.witcher_hp -= 100
+
         reward = self._reward
+
+
         done = self._done
 
         return new_state, reward, done, info
