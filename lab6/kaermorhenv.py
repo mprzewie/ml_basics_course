@@ -36,16 +36,14 @@ def map_from_csv(f_name: str) -> np.ndarray:
     return np.genfromtxt(f_name, delimiter=',').astype(int)
 
 
-def setup_board(height: int, width: int) -> np.ndarray:
-    board = np.zeros((height, width)).astype(int)
-    board[0, :] = 1
-    board[-1, :] = 1
-    board[:, 0] = 1
-    board[:, -1] = 1
+_board = np.zeros((10, 10)).astype(int)
+_board[0, :] = 1
+_board[-1, :] = 1
+_board[:, 0] = 1
+_board[:, -1] = 1
 
-    board[1, 4] = board[2, 2] = board[2, 3] = board[2, 4] = board[3, 3] = board[3, 4] = MNT
+_board[1, 4] = _board[2, 2] = _board[2, 3] = _board[2, 4] = _board[3, 3] = _board[3, 4] = MNT
     # board[8,7] = board[7,7] = board[7,8] = MNT
-    return board
 
 
 class HyperParams(NamedTuple):
@@ -65,15 +63,21 @@ class SARSA(NamedTuple):
 class KaerMorhenv(DiscreteEnv):
     def __init__(
             self,
-            board: np.ndarray = setup_board(10, 10),
+            board: np.ndarray = _board,
             witcher_coords: np.ndarray = np.array([1, 1]),
-            monster_coords: np.ndarray = np.array([8, 8])
+            monsters_coords: List[np.ndarray] = None,
+            monsters_rewards: List[int] = None,
+            witcher_max_hp: int = 100
 
     ):
+        if monsters_coords is None:
+            monsters_coords = []
+        if monsters_rewards is None:
+            monsters_rewards = [100 for _ in monsters_coords]
         self.board: np.ndarray = board
-        self.monster_coords = monster_coords
-        self.witcher_hp = None
-
+        self.monsters_coords = monsters_coords
+        self.witcher_max_hp = witcher_max_hp
+        self.monsters_rewards = monsters_rewards
         n_states = np.prod(self.board.shape).sum()
 
         initial_state_distribution = np.zeros(n_states)
@@ -89,6 +93,8 @@ class KaerMorhenv(DiscreteEnv):
                 for action in ACTIONS
 
             }
+        self.available_rewards = None
+        self.witcher_hp = None
 
         super().__init__(
             nS=n_states,
@@ -99,7 +105,8 @@ class KaerMorhenv(DiscreteEnv):
         self.reset()
 
     def reset(self):
-        self.witcher_hp = 100
+        self.witcher_hp = self.witcher_max_hp
+        self.available_rewards = self.monsters_rewards[:]
 
         return super(KaerMorhenv, self).reset()
 
@@ -108,10 +115,9 @@ class KaerMorhenv(DiscreteEnv):
         old_state = self.s
         old_done = self._done
         new_state, reward, done, info = super(KaerMorhenv, self).step(a)
-
         if old_done:
             self.s = new_state = old_state
-        reward = self._reward if self._reward else reward
+        reward = self._reward
         done = self._done
 
         return new_state, reward, done, info
@@ -119,7 +125,7 @@ class KaerMorhenv(DiscreteEnv):
     def _render_state(self, ax):
         ax.imshow(COLORS[self._state_board])
         status = "Wiedźmin szuka potwora"
-        if self.monster_dead:
+        if sum(self.available_rewards) == 0:
             status = "Hurra! Wiedźmin wygrał!"
         elif self.witcher_dead:
             status = "To nie ma sensu. Idę pić."
@@ -148,7 +154,8 @@ class KaerMorhenv(DiscreteEnv):
     @property
     def _state_board(self) -> np.ndarray:
         state_board = self.board.copy()
-        state_board[tuple(self.monster_coords)] = MNST
+        for coords in self.monsters_coords:
+            state_board[tuple(coords)] = MNST
         state_board[tuple(self.witcher_coords)] = WTCH
         return state_board
 
@@ -164,13 +171,7 @@ class KaerMorhenv(DiscreteEnv):
             new_state = self.coords_to_state(np.array([n_y, n_x]))
         else:
             new_state = self.coords_to_state(np.array([c_y, c_x]))
-
-        done = new_state == self.coords_to_state(self.monster_coords)
-        if done:
-            reward = 100
-        else:
-            reward = -1
-        return [(probabilitity, new_state, reward, done)]
+        return [(probabilitity, new_state, -1, False)]
 
     @property
     def witcher_coords(self):
@@ -183,20 +184,25 @@ class KaerMorhenv(DiscreteEnv):
         return np.unravel_index(state, self.board.shape)
 
     @property
-    def monster_dead(self) -> bool:
-        return self.s == self.coords_to_state(self.monster_coords)
-
-    @property
     def witcher_dead(self):
         return self.witcher_hp <= 0
 
     @property
     def _reward(self):
-        if self.monster_dead:
-            return 100
+        if self._found_monster is not None and self.available_rewards[self._found_monster] > 0:
+            reward = self.available_rewards[self._found_monster]
+            self.available_rewards[self._found_monster] = 0
+            return reward
         if self.witcher_dead:
             return -100
+        return -1
 
     @property
     def _done(self):
-        return self.monster_dead or self.witcher_dead
+        return sum(self.available_rewards) == 0 or self.witcher_dead
+
+    @property
+    def _found_monster(self) -> int:
+        tupled_coords =  [tuple(c) for c in self.monsters_coords]
+        tupled_witcher = tuple(self.witcher_coords)
+        return tupled_coords.index(tupled_witcher) if tupled_witcher in tupled_coords else None
